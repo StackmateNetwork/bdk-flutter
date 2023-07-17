@@ -19,6 +19,7 @@ init:
 	rustup target add aarch64-apple-darwin x86_64-apple-darwin
 	#rustup target add armv7-apple-ios armv7s-apple-ios i386-apple-ios ## deprecated
 	rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+	rustup target add x86_64-unknown-linux-gnu
 	cargo install flutter_rust_bridge_codegen
 	cargo install cargo-ndk
 	@if [ $$(uname) == "Darwin" ] ; then cargo install cargo-lipo ; fi
@@ -36,22 +37,27 @@ target/universal/release/libexample.a:
 ## android: Compile the android targets (arm64, armv7 and i686)
 android: target/aarch64-linux-android/release/libexample.so target/armv7-linux-androideabi/release/libexample.so target/i686-linux-android/release/libexample.so
 target/aarch64-linux-android/release/libexample.so: $(SOURCES)
-		    cargo ndk -t arm64-v8a build --release
+	cargo ndk -t arm64-v8a build --release
 	@echo "[Done ✅] $@"
 target/armv7-linux-androideabi/release/libexample.so: $(SOURCES)
-		 cargo ndk -t armeabi-v7a build --release
+	cargo ndk -t armeabi-v7a build --release
 	@echo "[Done ✅] $@"
 target/i686-linux-android/release/libexample.so: $(SOURCES)
-		cargo ndk -t x86 build --release
+	cargo ndk -t x86 build --release
 	@echo "[Done ✅] $@"
 target/x86_64-linux-android/release/libexample.so: $(SOURCES)
-		 cargo ndk -t x86_64 build --release
+	cargo ndk -t x86_64 build --release
+	@echo "[Done ✅] $@"
+
+linux: target/x86_64-unknown-linux-gnu/release/libexample.so
+target/x86_64-unknown-linux-gnu/release/libexample.so: $(SOURCES)
+	cargo build --target x86_64-unknown-linux-gnu --release
 	@echo "[Done ✅] $@"
 
 bindings: copy/bindings
 copy/bindings: $(SOURCES)
 #	cbindgen $^ -c cbindgen.toml | grep -v \#include | uniq > $@
-	 @echo "[COPYING BINARIES TO FLUTTER PACKAGE ...] $@"
+	@echo "[COPYING BINARIES TO FLUTTER PACKAGE ...] $@"
 	sh copy.sh
 	@echo "[Done ✅]"
 	@echo "[*** ALL TASKS Completed ✅ ***]"
